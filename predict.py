@@ -28,11 +28,12 @@ feature_vectors = []
 
 for sentence in subjective_sentences:
   feature_vector = np.zeros(len(word_to_index))
-  words = list(set(line.split(' ')))
+  words = list(set(sentence.split(' ')))
   for word in words:
     word = word.strip()
     feature_vector[word_to_index[word]] = 1
-    feature_vectors.append(feature_vector)
+
+  feature_vectors.append(feature_vector)
 
 assert len(feature_vectors) == len(labels)
 
