@@ -1,7 +1,8 @@
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix 
+from sklearn.metrics import confusion_matrix
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
 
 subjective_sentences_file = "data/Steve+Rhodes/subj.Steve+Rhodes"
@@ -42,10 +43,10 @@ X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, tes
 assert len(X_train) == len(y_train)
 assert len(X_test) == len(y_test)
 
-svm_model = SVC(kernel="linear", C=1).fit(X_train, y_train)
-svm_predictions = svm_model.predict(X_test) 
-  
-accuracy = svm_model.score(X_test, y_test) 
+svm_model = OneVsRestClassifier(SVC(kernel="linear", C=1)).fit(X_train, y_train)
+svm_predictions = svm_model.predict(X_test)
+
+accuracy = svm_model.score(X_test, y_test)
 print(accuracy)
 
 cm = confusion_matrix(y_test, svm_predictions)
