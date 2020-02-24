@@ -1,5 +1,5 @@
 library(ggplot2)
-library(grid)
+library(gridExtra)
 
 accuracies = read.csv("results.csv")
 
@@ -58,4 +58,7 @@ four_plot = ggplot() +
   scale_y +
   theme
 
-grid.draw(cbind(ggplotGrob(three_plot), ggplotGrob(four_plot), size = "first"))
+grid.arrange(three_plot, four_plot, ncol = 2)
+
+g <- arrangeGrob(three_plot, four_plot, ncol = 2)
+ggsave(file="avg_accuracies.png", g, width = 15, height = 7, scale = 2, units = "cm")
