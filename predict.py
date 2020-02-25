@@ -75,11 +75,12 @@ def run(author, nr_classes, feature_vectors, labels):
     ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
 
     with open('results.csv', 'a') as f:
-        f.write(f"{author},{nr_classes},{reg_accuracy},{ova_accuracy}\n")
+        f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
+        f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
 
 
 with open('results.csv', 'w') as f:
-    f.write('author,nr_classes,reg_accuracy,ova_accuracy\n')
+    f.write('author,nr_classes,method,accuracy\n')
 
 for author_name in subjective_sentences_files:
     print(f">>> Using {author_name} dataset")

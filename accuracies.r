@@ -4,23 +4,7 @@ library(gridExtra)
 accuracies = read.csv("results.csv")
 
 three = accuracies[ accuracies$nr_classes == 3, ]
-three_reg = three[ c("author", "reg_accuracy") ]
-three_ova = three[ c("author", "ova_accuracy") ]
-three_reg$method = rep("reg", nrow(three_reg))
-three_ova$method = rep("ova", nrow(three_ova))
-colnames(three_reg) = c("author", "accuracy", "method")
-colnames(three_ova) = c("author", "accuracy", "method")
-three = rbind(three_reg, three_ova)
-
 four = accuracies[ accuracies$nr_classes == 4, ]
-four_reg = four[ c("author", "reg_accuracy") ]
-four_ova = four[ c("author", "ova_accuracy") ]
-four_reg$method = rep("reg", nrow(four_reg))
-four_ova$method = rep("ova", nrow(four_ova))
-colnames(four_reg) = c("author", "accuracy", "method")
-colnames(four_ova) = c("author", "accuracy", "method")
-four = rbind(four_reg, four_ova)
-
 
 theme = theme(
   panel.grid.major = element_blank(),
