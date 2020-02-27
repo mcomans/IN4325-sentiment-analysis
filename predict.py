@@ -61,6 +61,20 @@ def regression(X_train, X_test, y_train, y_test):
     # Maybe we should create a confusion matrix as well for regression with rounded values
     return accuracy
 
+def generate_feature_vectors(subjective_sentences):
+    feature_vectors = []
+
+    for sentence in subjective_sentences:
+        feature_vector = np.zeros(len(word_to_index))
+        words = list(set(sentence.split(' ')))
+        for word in words:
+            word = word.strip()
+            feature_vector[word_to_index[word]] = 1
+
+        feature_vectors.append(feature_vector)
+    
+    return feature_vectors
+
 
 def run(author, nr_classes, feature_vectors, labels):
     assert len(feature_vectors) == len(labels)
@@ -100,16 +114,7 @@ for author_name in subjective_sentences_files:
                 if word not in word_to_index:
                     word_to_index[word] = len(word_to_index)
 
-    feature_vectors = []
-
-    for sentence in subjective_sentences:
-        feature_vector = np.zeros(len(word_to_index))
-        words = list(set(sentence.split(' ')))
-        for word in words:
-            word = word.strip()
-            feature_vector[word_to_index[word]] = 1
-
-        feature_vectors.append(feature_vector)
+    feature_vectors = generate_feature_vectors(subjective_sentences)
 
     print(">> With three class labels")
     run(author_name, 3, feature_vectors, read_labels(three_class_labels_file))
