@@ -1,6 +1,9 @@
+.vscode
+Rplots.pdf
 .idea/
 *.csv
 .Rhistory
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
