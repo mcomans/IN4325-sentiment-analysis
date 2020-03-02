@@ -1,8 +1,8 @@
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVR
@@ -47,9 +47,16 @@ def read_labels(labels_filepath):
     return labels
 
 
-def classify_ova(X_train, X_test, y_train, y_test):
-    print("> Running One-vs-All classifier...")
-    svm_model = OneVsRestClassifier(SVC(kernel="linear", C=1)).fit(X_train, y_train)
+def classify_ova(X_train, X_test, y_train, y_test, c):
+    if c > - 1:
+        print("> Running One-vs-All classifier without crossvalidation...")
+        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
+    else:
+        print("> Running One-vs-All classifier with crossvalidation...")
+        params = [{ "kernel": ["linear"], "C": np.logspace(-6, 1, 25)}]
+        svm_model = GridSearchCV(SVC(), param_grid=params, n_jobs=-1)
+        svm_model.fit(X_train, y_train)        
+        print("> Found best C value at " + str(svm_model.best_estimator_.C))
 
     svm_predictions = svm_model.predict(X_test)
 
@@ -62,13 +69,25 @@ def classify_ova(X_train, X_test, y_train, y_test):
     return accuracy
 
 
-def regression(X_train, X_test, y_train, y_test):
-    print("> Running linear support vector regression...")
-    svm_model = LinearSVR(epsilon=0.1).fit(X_train, y_train)  # Not sure what epsilon should be
+def regression(X_train, X_test, y_train, y_test, epsilon):
+    if epsilon > - 1:
+        print("> Running linear support vector regression without crossvalidation...")
+        svm_model = LinearSVR(epsilon=epsilon).fit(X_train, y_train)  # Not sure what epsilon should be
+    else:
+        print("> Running linear support vector regression with crossvalidation...")
+        params = [{"epsilon": np.logspace(-6, 1, 25)}]
+        svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
+        svm_model.fit(X_train, y_train)
+        print("> Found best C value at " + str(svm_model.best_estimator_.C))
 
-    accuracy = svm_model.score(X_test, y_test)
+    svm_predictions = svm_model.predict(X_test)
+    rounded_predictions = np.round(svm_predictions)
+    accuracy = accuracy_score(rounded_predictions, y_test)
     print(accuracy)
-    # Maybe we should create a confusion matrix as well for regression with rounded values
+
+    cm = confusion_matrix(y_test, rounded_predictions)
+    print(cm)
+
     return accuracy
 
 def run(author, nr_classes, feature_vectors, labels):
@@ -80,8 +99,8 @@ def run(author, nr_classes, feature_vectors, labels):
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test)
-    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1)
+    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, -1)
 
     with open('results.csv', 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
