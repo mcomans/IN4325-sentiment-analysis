@@ -1,7 +1,7 @@
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, StratifiedKFold
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
@@ -53,10 +53,21 @@ def classify_ova(X_train, X_test, y_train, y_test, c):
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
         print("> Running One-vs-All classifier with crossvalidation...")
-        params = [{ "kernel": ["linear"], "C": np.logspace(-6, 1, 25)}]
-        svm_model = GridSearchCV(SVC(), param_grid=params, n_jobs=-1)
-        svm_model.fit(X_train, y_train)        
-        print("> Found best C value at " + str(svm_model.best_estimator_.C))
+        Cs = np.logspace(-4, 1, 10)
+        best_C_score = -1
+        best_C = -1
+        for C in Cs:
+            svm_model = OneVsRestClassifier(SVC(kernel="linear", C=C))
+            cv_scores = cross_val_score(estimator=svm_model,
+                              X=X_train,
+                              y=y_train,
+                              cv=StratifiedKFold(n_splits=5))
+            if cv_scores.mean() > best_C_score:
+                best_C_score = cv_scores.mean()
+                best_C = C
+        print("> Found best C value at " + str(best_C))
+
+        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_C)).fit(X_train, y_train) 
 
     svm_predictions = svm_model.predict(X_test)
 
@@ -72,13 +83,16 @@ def classify_ova(X_train, X_test, y_train, y_test, c):
 def regression(X_train, X_test, y_train, y_test, epsilon):
     if epsilon > - 1:
         print("> Running linear support vector regression without crossvalidation...")
-        svm_model = LinearSVR(epsilon=epsilon).fit(X_train, y_train)  # Not sure what epsilon should be
+        svm_model = LinearSVR(epsilon=epsilon).fit(X_train, y_train)  
     else:
         print("> Running linear support vector regression with crossvalidation...")
-        params = [{"epsilon": np.logspace(-6, 1, 25)}]
+        params = [{"epsilon": np.logspace(-15, -4, 20)}]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
-        print("> Found best C value at " + str(svm_model.best_estimator_.C))
+        best_eps = svm_model.best_estimator_.epsilon
+        print("> Found best epsilon value at " + str(best_eps))
+        svm_model = LinearSVR(epsilon=best_eps)
+        svm_model.fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
     rounded_predictions = np.round(svm_predictions)
@@ -99,8 +113,10 @@ def run(author, nr_classes, feature_vectors, labels):
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1)
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1) 
+          # for speed value for epsilon can be set to 0.00001
     ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, -1)
+          # for speed value for C can be set to 0.005
 
     with open('results.csv', 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
