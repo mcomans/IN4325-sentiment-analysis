@@ -1,10 +1,15 @@
 import numpy as np
 
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVR
+
+from nltk.tokenize import word_tokenize
+
+from preprocessing import tokenize, remove_stopwords, lemmatize_words
 
 subjective_sentences_files = {
     "dennis": "data/Dennis+Schwartz/subj.Dennis+Schwartz",
@@ -27,6 +32,11 @@ four_class_labels_files = {
     "steve": "data/Steve+Rhodes/label.4class.Steve+Rhodes",
 }
 
+parameter_configs = {
+    "unigrams": { 'ngram_range': [1,1] },
+    "bigrams": { 'ngram_range': [2,2]},
+    "bigrams and unigrams": {'ngram_range': [1,2]}
+}
 
 def read_labels(labels_filepath):
     labels = []
@@ -61,29 +71,14 @@ def regression(X_train, X_test, y_train, y_test):
     # Maybe we should create a confusion matrix as well for regression with rounded values
     return accuracy
 
-def generate_feature_vectors(subjective_sentences):
-    feature_vectors = []
-
-    for sentence in subjective_sentences:
-        feature_vector = np.zeros(len(word_to_index))
-        words = list(set(sentence.split(' ')))
-        for word in words:
-            word = word.strip()
-            feature_vector[word_to_index[word]] = 1
-
-        feature_vectors.append(feature_vector)
-    
-    return feature_vectors
-
-
 def run(author, nr_classes, feature_vectors, labels):
-    assert len(feature_vectors) == len(labels)
+    # assert len(feature_vectors) == len(labels)
 
     X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.5,
                                                         random_state=0)
 
-    assert len(X_train) == len(y_train)
-    assert len(X_test) == len(y_test)
+    # assert len(X_train) == len(y_train)
+    # assert len(X_test) == len(y_test)
 
     reg_accuracy = regression(X_train, X_test, y_train, y_test)
     ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
@@ -92,6 +87,14 @@ def run(author, nr_classes, feature_vectors, labels):
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
 
+def preprocessor(text):
+    return text
+
+def tokenizer(text):
+    tokenized_words = tokenize(text)
+    filtered_words = remove_stopwords(tokenized_words)
+    lemmatized_words = lemmatize_words(filtered_words)
+    return lemmatized_words
 
 with open('results.csv', 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
@@ -103,18 +106,12 @@ for author_name in subjective_sentences_files:
     four_class_labels_file = four_class_labels_files[author_name]
 
     subjective_sentences = []
-    word_to_index = {}
 
     with open(subjective_sentences_file) as f:
-        for line in f:
-            subjective_sentences.append(line)
-            words = list(set(line.split(' ')))
-            for word in words:
-                word = word.strip()
-                if word not in word_to_index:
-                    word_to_index[word] = len(word_to_index)
+        subjective_sentences = [line for line in f]
 
-    feature_vectors = generate_feature_vectors(subjective_sentences)
+    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1,2])
+    feature_vectors = vectorizer.fit_transform(subjective_sentences)
 
     print(">> With three class labels")
     run(author_name, 3, feature_vectors, read_labels(three_class_labels_file))
