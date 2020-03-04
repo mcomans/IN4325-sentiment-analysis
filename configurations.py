@@ -1,9 +1,20 @@
-from preprocessing import tokenize, remove_stopwords, lemmatize_words
+from preprocessing import tokenize, remove_stopwords, lemmatize_words, Tokenizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 configurations = {
     'replicate-pang': {
-        'ngram_range': [1,1],
-        'tokenization_pipeline': [tokenize],
-        'vectorizer': 'binary'
+        'vectorizer': CountVectorizer(binary=True, tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1,1])
+    },
+    'unigrams-bigrams': {
+        'vectorizer': CountVectorizer(binary=True, tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1,2])
+    },
+    'unigrams-bigrams-freq': {
+        'vectorizer': CountVectorizer(tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1,2])
+    },
+    'unigrams-bigrams-tfidf': {
+        'vectorizer': TfidfVectorizer(tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1,2])
+    },
+    'unigrams-lemmatization-stopwords': {
+        'vectorizer': CountVectorizer(tokenizer=Tokenizer([tokenize, lemmatize_words, remove_stopwords]).tokenize, ngram_range=[1,2])
     }
 }

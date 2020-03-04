@@ -142,12 +142,9 @@ for author_name in subjective_sentences_files:
     config = configurations[args.configuration]
     debug_log(config)
 
-    vectorizer = CountVectorizer(
-        tokenizer=Tokenizer(config['tokenization_pipeline']).tokenize, 
-        preprocessor=None, 
-        binary=config['vectorizer'] == 'binary', 
-        ngram_range=config['ngram_range'])
+    vectorizer = config['vectorizer']
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
+    
     print("# of features: " + str(len(vectorizer.get_feature_names())))
 
     print(">> With three class labels:")
