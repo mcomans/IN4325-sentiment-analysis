@@ -86,7 +86,8 @@ def regression(X_train, X_test, y_train, y_test, epsilon):
         svm_model = LinearSVR(epsilon=epsilon).fit(X_train, y_train)  
     else:
         print("> Running linear support vector regression with crossvalidation...")
-        params = [{"epsilon": np.logspace(-15, -4, 20)}]
+        params = [{"epsilon": np.logspace(-10, -1, 10 )},
+                  {"C": np.logspace(-4, 1, 10) }]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
@@ -107,15 +108,15 @@ def regression(X_train, X_test, y_train, y_test, epsilon):
 def run(author, nr_classes, feature_vectors, labels):
     # assert len(feature_vectors) == len(labels)
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.5,
+    X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3,
                                                         random_state=0)
 
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1) 
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, 0.00001) 
           # for speed value for epsilon can be set to 0.00001
-    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, -1)
+    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, 0.005)
           # for speed value for C can be set to 0.005
 
     with open('results.csv', 'a') as f:
