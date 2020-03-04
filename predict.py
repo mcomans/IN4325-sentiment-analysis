@@ -1,16 +1,13 @@
 import numpy as np
 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, StratifiedKFold
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVR
 
-from nltk.tokenize import word_tokenize
 import argparse
 
-from preprocessing import tokenize, remove_stopwords, lemmatize_words, Tokenizer
 from configurations import configurations
 
 subjective_sentences_files = {
@@ -36,9 +33,12 @@ four_class_labels_files = {
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-parser.add_argument("-c", "--configuration", choices=configurations, default='replicate-pang', help="Configuration preset")
-parser.add_argument("-o", "--output", help="Output filename", default="results.csv")
+parser.add_argument("-c", "--configuration", choices=configurations,
+                    default='replicate-pang', help="Configuration preset")
+parser.add_argument("-o", "--output", help="Output filename",
+                    default="results.csv")
 args = parser.parse_args()
+
 
 def debug_log(text):
     if (args.debug):
@@ -57,7 +57,8 @@ def read_labels(labels_filepath):
 def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     if c > - 1:
         debug_log("> Running One-vs-All classifier without crossvalidation...")
-        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
+        svm_model = OneVsRestClassifier(
+            SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
         debug_log("> Running One-vs-All classifier with crossvalidation...")
         model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
@@ -68,7 +69,8 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
         best_c = svm_model.best_estimator_.estimator.C
         debug_log("> Found best C value at " + str(best_c))
 
-        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
+        svm_model = OneVsRestClassifier(
+            SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
 
@@ -83,10 +85,12 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
 
 def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     if epsilon > -1 and c > -1:
-        debug_log("> Running linear support vector regression without crossvalidation...")
+        debug_log(
+            "> Running linear support vector regression without crossvalidation...")
         svm_model = LinearSVR(epsilon=epsilon, C=c).fit(X_train, y_train)
     else:
-        debug_log("> Running linear support vector regression with crossvalidation...")
+        debug_log(
+            "> Running linear support vector regression with crossvalidation...")
         params = [{"epsilon": np.logspace(-10, -1, 10)},
                   {"C": np.logspace(-4, 2, 10)}]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
@@ -100,7 +104,8 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
 
     svm_predictions = svm_model.predict(X_test)
     rounded_predictions = np.round(svm_predictions)
-    rounded_predictions = [nr_classes - 1 if x > nr_classes - 1 else x for x in rounded_predictions]
+    rounded_predictions = [nr_classes - 1 if x >
+                           nr_classes - 1 else x for x in rounded_predictions]
     accuracy = accuracy_score(rounded_predictions, y_test)
 
     cm = confusion_matrix(y_test, rounded_predictions)

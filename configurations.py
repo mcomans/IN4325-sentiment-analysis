@@ -14,7 +14,7 @@ configurations = {
     },
     'unigrams-bigrams-freq': {
         'vectorizer': CountVectorizer(
-            tokenizer=Tokenizer([tokenize]).tokenize, 
+            tokenizer=Tokenizer([tokenize]).tokenize,
             ngram_range=[1, 2])
     },
     'unigrams-bigrams-tfidf': {
@@ -24,9 +24,14 @@ configurations = {
     },
     'unigrams-lemmatization-stopwords': {
         'vectorizer': CountVectorizer(
-            tokenizer=Tokenizer([tokenize, lemmatize_words, remove_stopwords]).tokenize, ngram_range=[1,1], binary=True)
+            tokenizer=Tokenizer([tokenize, lemmatize_words, remove_stopwords]).tokenize, ngram_range=[1, 1], binary=True)
     },
     'unigrams-tfidf': {
-        'vectorizer': TfidfVectorizer(tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1,1])
+        'vectorizer': TfidfVectorizer(tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1, 1])
+    },
+    'unigrams-lemmatization': {
+        'vectorizer': CountVectorizer(
+            tokenizer=Tokenizer([tokenize, lemmatize_words]).tokenize,
+            ngram_range=[1, 1], binary=True)
     }
 }

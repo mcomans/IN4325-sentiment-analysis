@@ -3,6 +3,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.tag import pos_tag
 
+
 class Tokenizer:
     def __init__(self, steps):
         self.steps = steps
@@ -16,6 +17,7 @@ class Tokenizer:
             result = step(result)
         return result
 
+
 def to_wordnet(tag):
     if tag.startswith('J'):
         return wordnet.ADJ
@@ -28,10 +30,12 @@ def to_wordnet(tag):
     else:
         return wordnet.NOUN
 
+
 def tokenize(text):
     """Tokenizes text to words"""
     # Use NLTK word tokanizer
     return word_tokenize(text)
+
 
 def remove_stopwords(words):
     """Removes stopwords from list of words"""
@@ -39,6 +43,7 @@ def remove_stopwords(words):
     stopwords_en = set(stopwords.words('english'))
     # Filter and return non-stopwords
     return [word for word in words if word not in stopwords_en]
+
 
 def lemmatize_words(tokens):
     """Uses WordNet lemmatizer to lemmatize list of tokens"""
