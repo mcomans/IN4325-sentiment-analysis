@@ -53,7 +53,7 @@ def classify_ova(X_train, X_test, y_train, y_test, c):
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
         print("> Running One-vs-All classifier with crossvalidation...")
-        Cs = np.logspace(-4, 1, 10)
+        Cs = np.logspace(-4, 2, 10)
         best_C_score = -1
         best_C = -1
         for C in Cs:
@@ -83,16 +83,18 @@ def classify_ova(X_train, X_test, y_train, y_test, c):
 def regression(X_train, X_test, y_train, y_test, epsilon):
     if epsilon > - 1:
         print("> Running linear support vector regression without crossvalidation...")
-        svm_model = LinearSVR(epsilon=epsilon).fit(X_train, y_train)  
+        svm_model = LinearSVR(epsilon=epsilon, C = 1).fit(X_train, y_train)  
     else:
         print("> Running linear support vector regression with crossvalidation...")
-        params = [{"epsilon": np.logspace(-10, -1, 10 )},
-                  {"C": np.logspace(-4, 1, 10) }]
+        params = [{"epsilon": np.logspace(-10, -1, 10)},
+                  {"C": np.logspace(-4, 2, 10) }]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
+        best_C = svm_model.best_estimator_.C
         print("> Found best epsilon value at " + str(best_eps))
-        svm_model = LinearSVR(epsilon=best_eps)
+        print("> Found best C value at " + str(best_C))
+        svm_model = LinearSVR(epsilon=best_eps, C = best_C)
         svm_model.fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
@@ -114,9 +116,9 @@ def run(author, nr_classes, feature_vectors, labels):
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test, 0.00001) 
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1) 
           # for speed value for epsilon can be set to 0.00001
-    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, 0.005)
+    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, -1)
           # for speed value for C can be set to 0.005
 
     with open('results.csv', 'a') as f:
