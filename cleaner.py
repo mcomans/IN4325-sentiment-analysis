@@ -53,7 +53,7 @@ patterns = [
     r' ?(mild |one |two |three )?thumbs (way )?(up|down|sideways)',
 ]
 
-DEBUG = True
+DEBUG = False
 
 removed_matches = []
 
