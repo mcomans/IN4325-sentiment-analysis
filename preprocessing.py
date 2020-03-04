@@ -2,6 +2,19 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
+class Tokenizer:
+    def __init__(self, steps):
+        self.steps = steps
+
+    def tokenize(self, text):
+        if (len(self.steps) < 1):
+            return text
+        steps_cp = self.steps[:]
+        result = steps_cp.pop(0)(text)
+        for step in steps_cp:
+            result = step(result)
+        return result
+
 def tokenize(text):
     """Tokenizes text to words"""
     # Use NLTK word tokanizer

@@ -8,8 +8,10 @@ from sklearn.svm import SVC
 from sklearn.svm import LinearSVR
 
 from nltk.tokenize import word_tokenize
+import argparse
 
-from preprocessing import tokenize, remove_stopwords, lemmatize_words
+from preprocessing import tokenize, remove_stopwords, lemmatize_words, Tokenizer
+from configurations import configurations
 
 subjective_sentences_files = {
     "dennis": "data/Dennis+Schwartz/subj.clean.Dennis+Schwartz",
@@ -32,11 +34,16 @@ four_class_labels_files = {
     "steve": "data/Steve+Rhodes/label.4class.clean.Steve+Rhodes",
 }
 
-parameter_configs = {
-    "unigrams": {'ngram_range': [1, 1]},
-    "bigrams": {'ngram_range': [2, 2]},
-    "bigrams and unigrams": {'ngram_range': [1, 2]}
-}
+parser = argparse.ArgumentParser()
+parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+parser.add_argument("-c", "--configuration", choices=configurations, default='replicate-pang')
+args = parser.parse_args()
+
+print(args)
+
+def debug_log(text):
+    if (args.debug):
+        print(text)
 
 
 def read_labels(labels_filepath):
@@ -50,45 +57,45 @@ def read_labels(labels_filepath):
 
 def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     if c > - 1:
-        print("> Running One-vs-All classifier without crossvalidation...")
+        debug_log("> Running One-vs-All classifier without crossvalidation...")
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
-        print("> Running One-vs-All classifier with crossvalidation...")
+        debug_log("> Running One-vs-All classifier with crossvalidation...")
         model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
         params = {"estimator__C": np.logspace(-4, 2, 10)}
 
         svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_c = svm_model.best_estimator_.estimator.C
-        print("> Found best C value at " + str(best_c))
+        debug_log("> Found best C value at " + str(best_c))
 
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
 
     accuracy = svm_model.score(X_test, y_test)
-    print(accuracy)
 
     cm = confusion_matrix(y_test, svm_predictions)
-    print(cm)
+    debug_log("Confusion matrix:")
+    debug_log(cm)
 
-    return accuracy
+    return accuracy, cm
 
 
 def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     if epsilon > -1 and c > -1:
-        print("> Running linear support vector regression without crossvalidation...")
+        debug_log("> Running linear support vector regression without crossvalidation...")
         svm_model = LinearSVR(epsilon=epsilon, C=c).fit(X_train, y_train)
     else:
-        print("> Running linear support vector regression with crossvalidation...")
+        debug_log("> Running linear support vector regression with crossvalidation...")
         params = [{"epsilon": np.logspace(-10, -1, 10)},
                   {"C": np.logspace(-4, 2, 10)}]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
         best_c = svm_model.best_estimator_.C
-        print("> Found best epsilon value at " + str(best_eps))
-        print("> Found best C value at " + str(best_c))
+        debug_log("> Found best epsilon value at " + str(best_eps))
+        debug_log("> Found best C value at " + str(best_c))
         svm_model = LinearSVR(epsilon=best_eps, C=best_c)
         svm_model.fit(X_train, y_train)
 
@@ -96,43 +103,27 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     rounded_predictions = np.round(svm_predictions)
     rounded_predictions = [nr_classes - 1 if x > nr_classes - 1 else x for x in rounded_predictions]
     accuracy = accuracy_score(rounded_predictions, y_test)
-    print(accuracy)
 
     cm = confusion_matrix(y_test, rounded_predictions)
-    print(cm)
+    debug_log("Confusion matrix:")
+    debug_log(cm)
 
-    return accuracy
+    return accuracy, cm
 
 
 def run(author, nr_classes, feature_vectors, labels):
-    # assert len(feature_vectors) == len(labels)
-
     X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3,
                                                         random_state=0)
-
-    # assert len(X_train) == len(y_train)
-    # assert len(X_test) == len(y_test)
-
-    reg_accuracy = regression(X_train, X_test, y_train, y_test, nr_classes)
+    reg_accuracy, reg_cm = regression(X_train, X_test, y_train, y_test, nr_classes)
     # for speed value for epsilon can be set to 0.00001
-    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
+    print("Regression accuracy: " + str(reg_accuracy))
+    ova_accuracy, ova_cm = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
+    print("OVA accuracy: " + str(ova_accuracy))
 
     with open('results.csv', 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
-
-
-def preprocessor(text):
-    return text
-
-
-def tokenizer(text):
-    tokenized_words = tokenize(text)
-    filtered_words = remove_stopwords(tokenized_words)
-    lemmatized_words = lemmatize_words(filtered_words)
-    return lemmatized_words
-
 
 with open('results.csv', 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
@@ -148,11 +139,19 @@ for author_name in subjective_sentences_files:
     with open(subjective_sentences_file) as f:
         subjective_sentences = [line for line in f]
 
-    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1, 2])
-    feature_vectors = vectorizer.fit_transform(subjective_sentences)
+    config = configurations[args.configuration]
+    debug_log(config)
 
-    print(">> With three class labels")
+    vectorizer = CountVectorizer(
+        tokenizer=Tokenizer(config['tokenization_pipeline']).tokenize, 
+        preprocessor=None, 
+        binary=config['vectorizer'] == 'binary', 
+        ngram_range=config['ngram_range'])
+    feature_vectors = vectorizer.fit_transform(subjective_sentences)
+    print("# of features: " + str(len(vectorizer.get_feature_names())))
+
+    print(">> With three class labels:")
     run(author_name, 3, feature_vectors, read_labels(three_class_labels_file))
 
-    print(">> With four class labels")
+    print(">> With four class labels:")
     run(author_name, 4, feature_vectors, read_labels(four_class_labels_file))
