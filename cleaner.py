@@ -48,7 +48,9 @@ patterns = [
 
     # Steve Rhodes
     r' ?\* \* \* \* = .*',
-    r' ?(1\/2)?((\* ?)+|of a star|1\/2) ?',
+    r' ?(1\/2 )?((\* )+(1\/2 )?(stars)?|of a star)',
+    r' ?1\/2 (stars?|of a star)+',
+    r' ?(mild |one |two |three )?thumbs (way )?(up|down|sideways)',
 ]
 
 DEBUG = True
