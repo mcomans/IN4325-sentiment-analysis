@@ -26,6 +26,9 @@ configurations = {
         'vectorizer': CountVectorizer(
             tokenizer=Tokenizer([tokenize, lemmatize_words, remove_stopwords]).tokenize, ngram_range=[1, 1], binary=True)
     },
+    'unigrams-bigrams-lemmatization-stopwords': {
+        'vectorizer': CountVectorizer(tokenizer=Tokenizer([tokenize, lemmatize_words, remove_stopwords]).tokenize, ngram_range=[1,2], binary=True)
+    },
     'unigrams-tfidf': {
         'vectorizer': TfidfVectorizer(tokenizer=Tokenizer([tokenize]).tokenize, ngram_range=[1, 1])
     },
