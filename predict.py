@@ -75,7 +75,7 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     return accuracy
 
 
-def regression(X_train, X_test, y_train, y_test, epsilon=-1, c=-1):
+def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     if epsilon > -1 and c > -1:
         print("> Running linear support vector regression without crossvalidation...")
         svm_model = LinearSVR(epsilon=epsilon, C=c).fit(X_train, y_train)
@@ -94,6 +94,7 @@ def regression(X_train, X_test, y_train, y_test, epsilon=-1, c=-1):
 
     svm_predictions = svm_model.predict(X_test)
     rounded_predictions = np.round(svm_predictions)
+    rounded_predictions = [nr_classes - 1 if x > nr_classes - 1 else x for x in rounded_predictions]
     accuracy = accuracy_score(rounded_predictions, y_test)
     print(accuracy)
 
@@ -112,7 +113,7 @@ def run(author, nr_classes, feature_vectors, labels):
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test)
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, nr_classes)
     # for speed value for epsilon can be set to 0.00001
     ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
