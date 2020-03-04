@@ -111,18 +111,20 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
 
 
 def run(author, nr_classes, feature_vectors, labels):
-    X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3,
-                                                        random_state=0)
-    reg_accuracy, reg_cm = regression(X_train, X_test, y_train, y_test, nr_classes)
+    X_train, X_test, y_train, y_test = train_test_split(
+        feature_vectors, labels, test_size=0.3, random_state=0)
+    reg_accuracy, reg_cm = regression(
+        X_train, X_test, y_train, y_test, nr_classes)
     # for speed value for epsilon can be set to 0.00001
     print("Regression accuracy: " + str(reg_accuracy))
     ova_accuracy, ova_cm = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
     print("OVA accuracy: " + str(ova_accuracy))
 
-    with open('results.csv', 'a') as f:
+    with open(args.output, 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
+
 
 with open(args.output, 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
