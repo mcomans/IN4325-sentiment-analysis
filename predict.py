@@ -54,18 +54,12 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
         print("> Running One-vs-All classifier with crossvalidation...")
-        cs = np.logspace(-4, 2, 10)
-        best_c_score = -1
-        best_c = -1
-        for test_c in cs:
-            svm_model = OneVsRestClassifier(SVC(kernel="linear", C=test_c))
-            cv_scores = cross_val_score(estimator=svm_model,
-                                        X=X_train,
-                                        y=y_train,
-                                        cv=StratifiedKFold(n_splits=5))
-            if cv_scores.mean() > best_c_score:
-                best_c_score = cv_scores.mean()
-                best_c = test_c
+        model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
+        params = {"estimator__C": np.logspace(-4, 2, 10)}
+
+        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1)
+        svm_model.fit(X_train, y_train)
+        best_c = svm_model.best_estimator_.estimator.C
         print("> Found best C value at " + str(best_c))
 
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
@@ -92,10 +86,10 @@ def regression(X_train, X_test, y_train, y_test, epsilon=-1, c=-1):
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
-        best_C = svm_model.best_estimator_.C
+        best_c = svm_model.best_estimator_.C
         print("> Found best epsilon value at " + str(best_eps))
-        print("> Found best C value at " + str(best_C))
-        svm_model = LinearSVR(epsilon=best_eps, C=best_C)
+        print("> Found best C value at " + str(best_c))
+        svm_model = LinearSVR(epsilon=best_eps, C=best_c)
         svm_model.fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
