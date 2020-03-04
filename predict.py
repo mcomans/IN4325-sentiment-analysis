@@ -1,8 +1,8 @@
 import numpy as np
 
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, StratifiedKFold
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVR
@@ -33,10 +33,11 @@ four_class_labels_files = {
 }
 
 parameter_configs = {
-    "unigrams": { 'ngram_range': [1,1] },
-    "bigrams": { 'ngram_range': [2,2]},
-    "bigrams and unigrams": {'ngram_range': [1,2]}
+    "unigrams": {'ngram_range': [1, 1]},
+    "bigrams": {'ngram_range': [2, 2]},
+    "bigrams and unigrams": {'ngram_range': [1, 2]}
 }
+
 
 def read_labels(labels_filepath):
     labels = []
@@ -47,9 +48,21 @@ def read_labels(labels_filepath):
     return labels
 
 
-def classify_ova(X_train, X_test, y_train, y_test):
-    print("> Running One-vs-All classifier...")
-    svm_model = OneVsRestClassifier(SVC(kernel="linear", C=1)).fit(X_train, y_train)
+def classify_ova(X_train, X_test, y_train, y_test, c=-1):
+    if c > - 1:
+        print("> Running One-vs-All classifier without crossvalidation...")
+        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
+    else:
+        print("> Running One-vs-All classifier with crossvalidation...")
+        model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
+        params = {"estimator__C": np.logspace(-4, 2, 10)}
+
+        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1)
+        svm_model.fit(X_train, y_train)
+        best_c = svm_model.best_estimator_.estimator.C
+        print("> Found best C value at " + str(best_c))
+
+        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
 
@@ -62,39 +75,64 @@ def classify_ova(X_train, X_test, y_train, y_test):
     return accuracy
 
 
-def regression(X_train, X_test, y_train, y_test):
-    print("> Running linear support vector regression...")
-    svm_model = LinearSVR(epsilon=0.1).fit(X_train, y_train)  # Not sure what epsilon should be
+def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
+    if epsilon > -1 and c > -1:
+        print("> Running linear support vector regression without crossvalidation...")
+        svm_model = LinearSVR(epsilon=epsilon, C=c).fit(X_train, y_train)
+    else:
+        print("> Running linear support vector regression with crossvalidation...")
+        params = [{"epsilon": np.logspace(-10, -1, 10)},
+                  {"C": np.logspace(-4, 2, 10)}]
+        svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
+        svm_model.fit(X_train, y_train)
+        best_eps = svm_model.best_estimator_.epsilon
+        best_c = svm_model.best_estimator_.C
+        print("> Found best epsilon value at " + str(best_eps))
+        print("> Found best C value at " + str(best_c))
+        svm_model = LinearSVR(epsilon=best_eps, C=best_c)
+        svm_model.fit(X_train, y_train)
 
-    accuracy = svm_model.score(X_test, y_test)
+    svm_predictions = svm_model.predict(X_test)
+    rounded_predictions = np.round(svm_predictions)
+    rounded_predictions = [nr_classes - 1 if x > nr_classes - 1 else x for x in rounded_predictions]
+    accuracy = accuracy_score(rounded_predictions, y_test)
     print(accuracy)
-    # Maybe we should create a confusion matrix as well for regression with rounded values
+
+    cm = confusion_matrix(y_test, rounded_predictions)
+    print(cm)
+
     return accuracy
+
 
 def run(author, nr_classes, feature_vectors, labels):
     # assert len(feature_vectors) == len(labels)
 
-    X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.5,
+    X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3,
                                                         random_state=0)
 
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test)
+    reg_accuracy = regression(X_train, X_test, y_train, y_test, nr_classes)
+    # for speed value for epsilon can be set to 0.00001
     ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
+    # for speed value for C can be set to 0.005
 
     with open('results.csv', 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
 
+
 def preprocessor(text):
     return text
+
 
 def tokenizer(text):
     tokenized_words = tokenize(text)
     filtered_words = remove_stopwords(tokenized_words)
     lemmatized_words = lemmatize_words(filtered_words)
     return lemmatized_words
+
 
 with open('results.csv', 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
@@ -110,7 +148,7 @@ for author_name in subjective_sentences_files:
     with open(subjective_sentences_file) as f:
         subjective_sentences = [line for line in f]
 
-    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1,2])
+    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1, 2])
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
 
     print(">> With three class labels")
