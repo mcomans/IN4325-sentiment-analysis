@@ -12,24 +12,24 @@ from nltk.tokenize import word_tokenize
 from preprocessing import tokenize, remove_stopwords, lemmatize_words
 
 subjective_sentences_files = {
-    "dennis": "data/Dennis+Schwartz/subj.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/subj.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/subj.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/subj.Steve+Rhodes",
+    "dennis": "data/Dennis+Schwartz/subj.clean.Dennis+Schwartz",
+    "james": "data/James+Berardinelli/subj.clean.James+Berardinelli",
+    "scott": "data/Scott+Renshaw/subj.clean.Scott+Renshaw",
+    "steve": "data/Steve+Rhodes/subj.clean.Steve+Rhodes",
 }
 
 three_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.3class.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.3class.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.3class.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.3class.Steve+Rhodes",
+    "dennis": "data/Dennis+Schwartz/label.3class.clean.Dennis+Schwartz",
+    "james": "data/James+Berardinelli/label.3class.clean.James+Berardinelli",
+    "scott": "data/Scott+Renshaw/label.3class.clean.Scott+Renshaw",
+    "steve": "data/Steve+Rhodes/label.3class.clean.Steve+Rhodes",
 }
 
 four_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.4class.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.4class.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.4class.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.4class.Steve+Rhodes",
+    "dennis": "data/Dennis+Schwartz/label.4class.clean.Dennis+Schwartz",
+    "james": "data/James+Berardinelli/label.4class.clean.James+Berardinelli",
+    "scott": "data/Scott+Renshaw/label.4class.clean.Scott+Renshaw",
+    "steve": "data/Steve+Rhodes/label.4class.clean.Steve+Rhodes",
 }
 
 parameter_configs = {
