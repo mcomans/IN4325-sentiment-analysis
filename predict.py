@@ -33,10 +33,11 @@ four_class_labels_files = {
 }
 
 parameter_configs = {
-    "unigrams": { 'ngram_range': [1,1] },
-    "bigrams": { 'ngram_range': [2,2]},
-    "bigrams and unigrams": {'ngram_range': [1,2]}
+    "unigrams": {'ngram_range': [1, 1]},
+    "bigrams": {'ngram_range': [2, 2]},
+    "bigrams and unigrams": {'ngram_range': [1, 2]}
 }
+
 
 def read_labels(labels_filepath):
     labels = []
@@ -47,27 +48,27 @@ def read_labels(labels_filepath):
     return labels
 
 
-def classify_ova(X_train, X_test, y_train, y_test, c):
+def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     if c > - 1:
         print("> Running One-vs-All classifier without crossvalidation...")
         svm_model = OneVsRestClassifier(SVC(kernel="linear", C=c)).fit(X_train, y_train)
     else:
         print("> Running One-vs-All classifier with crossvalidation...")
-        Cs = np.logspace(-4, 2, 10)
-        best_C_score = -1
-        best_C = -1
-        for C in Cs:
-            svm_model = OneVsRestClassifier(SVC(kernel="linear", C=C))
+        cs = np.logspace(-4, 2, 10)
+        best_c_score = -1
+        best_c = -1
+        for test_c in cs:
+            svm_model = OneVsRestClassifier(SVC(kernel="linear", C=test_c))
             cv_scores = cross_val_score(estimator=svm_model,
-                              X=X_train,
-                              y=y_train,
-                              cv=StratifiedKFold(n_splits=5))
-            if cv_scores.mean() > best_C_score:
-                best_C_score = cv_scores.mean()
-                best_C = C
-        print("> Found best C value at " + str(best_C))
+                                        X=X_train,
+                                        y=y_train,
+                                        cv=StratifiedKFold(n_splits=5))
+            if cv_scores.mean() > best_c_score:
+                best_c_score = cv_scores.mean()
+                best_c = test_c
+        print("> Found best C value at " + str(best_c))
 
-        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_C)).fit(X_train, y_train) 
+        svm_model = OneVsRestClassifier(SVC(kernel="linear", C=best_c)).fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
 
@@ -80,21 +81,21 @@ def classify_ova(X_train, X_test, y_train, y_test, c):
     return accuracy
 
 
-def regression(X_train, X_test, y_train, y_test, epsilon):
-    if epsilon > - 1:
+def regression(X_train, X_test, y_train, y_test, epsilon=-1, c=-1):
+    if epsilon > -1 and c > -1:
         print("> Running linear support vector regression without crossvalidation...")
-        svm_model = LinearSVR(epsilon=epsilon, C = 1).fit(X_train, y_train)  
+        svm_model = LinearSVR(epsilon=epsilon, C=c).fit(X_train, y_train)
     else:
         print("> Running linear support vector regression with crossvalidation...")
         params = [{"epsilon": np.logspace(-10, -1, 10)},
-                  {"C": np.logspace(-4, 2, 10) }]
+                  {"C": np.logspace(-4, 2, 10)}]
         svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
         best_C = svm_model.best_estimator_.C
         print("> Found best epsilon value at " + str(best_eps))
         print("> Found best C value at " + str(best_C))
-        svm_model = LinearSVR(epsilon=best_eps, C = best_C)
+        svm_model = LinearSVR(epsilon=best_eps, C=best_C)
         svm_model.fit(X_train, y_train)
 
     svm_predictions = svm_model.predict(X_test)
@@ -107,6 +108,7 @@ def regression(X_train, X_test, y_train, y_test, epsilon):
 
     return accuracy
 
+
 def run(author, nr_classes, feature_vectors, labels):
     # assert len(feature_vectors) == len(labels)
 
@@ -116,23 +118,26 @@ def run(author, nr_classes, feature_vectors, labels):
     # assert len(X_train) == len(y_train)
     # assert len(X_test) == len(y_test)
 
-    reg_accuracy = regression(X_train, X_test, y_train, y_test, -1) 
-          # for speed value for epsilon can be set to 0.00001
-    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test, -1)
-          # for speed value for C can be set to 0.005
+    reg_accuracy = regression(X_train, X_test, y_train, y_test)
+    # for speed value for epsilon can be set to 0.00001
+    ova_accuracy = classify_ova(X_train, X_test, y_train, y_test)
+    # for speed value for C can be set to 0.005
 
     with open('results.csv', 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
 
+
 def preprocessor(text):
     return text
+
 
 def tokenizer(text):
     tokenized_words = tokenize(text)
     filtered_words = remove_stopwords(tokenized_words)
     lemmatized_words = lemmatize_words(filtered_words)
     return lemmatized_words
+
 
 with open('results.csv', 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
@@ -148,7 +153,7 @@ for author_name in subjective_sentences_files:
     with open(subjective_sentences_file) as f:
         subjective_sentences = [line for line in f]
 
-    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1,2])
+    vectorizer = CountVectorizer(tokenizer=tokenizer, preprocessor=None, binary=True, ngram_range=[1, 2])
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
 
     print(">> With three class labels")
