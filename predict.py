@@ -36,10 +36,9 @@ four_class_labels_files = {
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-parser.add_argument("-c", "--configuration", choices=configurations, default='replicate-pang')
+parser.add_argument("-c", "--configuration", choices=configurations, default='replicate-pang', help="Configuration preset")
+parser.add_argument("-o", "--output", help="Output filename", default="results.csv")
 args = parser.parse_args()
-
-print(args)
 
 def debug_log(text):
     if (args.debug):
@@ -125,7 +124,7 @@ def run(author, nr_classes, feature_vectors, labels):
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
         f.write(f"{author},{nr_classes},ova,{ova_accuracy}\n")
 
-with open('results.csv', 'w') as f:
+with open(args.output, 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
 
 for author_name in subjective_sentences_files:
@@ -144,7 +143,7 @@ for author_name in subjective_sentences_files:
 
     vectorizer = config['vectorizer']
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
-    
+
     print("# of features: " + str(len(vectorizer.get_feature_names())))
 
     print(">> With three class labels:")
