@@ -1,7 +1,15 @@
 library(ggplot2)
 library(gridExtra)
 
-accuracies = read.csv("results.csv")
+args = commandArgs(trailingOnly=TRUE)
+
+if(length(args) == 0) {
+  args[1] = "results.csv"
+}
+
+print(paste("Reading file", args[1]))
+
+accuracies = read.csv(args[1])
 
 three = accuracies[ accuracies$nr_classes == 3, ]
 four = accuracies[ accuracies$nr_classes == 4, ]
