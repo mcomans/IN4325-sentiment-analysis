@@ -9,27 +9,7 @@ from sklearn.svm import LinearSVR
 import argparse
 
 from configurations import configurations
-
-subjective_sentences_files = {
-    "dennis": "data/Dennis+Schwartz/subj.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/subj.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/subj.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/subj.clean.Steve+Rhodes",
-}
-
-three_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.3class.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.3class.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.3class.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.3class.clean.Steve+Rhodes",
-}
-
-four_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.4class.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.4class.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.4class.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.4class.clean.Steve+Rhodes",
-}
+import data
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
@@ -134,11 +114,11 @@ def run(author, nr_classes, feature_vectors, labels):
 with open(args.output, 'w') as f:
     f.write('author,nr_classes,method,accuracy\n')
 
-for author_name in subjective_sentences_files:
-    print(f">>> Using {author_name} dataset")
-    subjective_sentences_file = subjective_sentences_files[author_name]
-    three_class_labels_file = three_class_labels_files[author_name]
-    four_class_labels_file = four_class_labels_files[author_name]
+for author in data.subjective_sentences_files():
+    print(f">>> Using dataset for author {author}")
+    subjective_sentences_file = data.subjective_sentences_files()[author]
+    three_class_labels_file = data.three_class_labels_files()[author]
+    four_class_labels_file = data.four_class_labels_files()[author]
 
     subjective_sentences = []
 
@@ -154,7 +134,7 @@ for author_name in subjective_sentences_files:
     print("# of features: " + str(len(vectorizer.get_feature_names())))
 
     print(">> With three class labels:")
-    run(author_name, 3, feature_vectors, read_labels(three_class_labels_file))
+    run(author, 3, feature_vectors, read_labels(three_class_labels_file))
 
     print(">> With four class labels:")
-    run(author_name, 4, feature_vectors, read_labels(four_class_labels_file))
+    run(author, 4, feature_vectors, read_labels(four_class_labels_file))

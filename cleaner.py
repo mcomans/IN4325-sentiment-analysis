@@ -1,46 +1,5 @@
 import re
-
-subjective_sentences_files = {
-    "dennis": "data/Dennis+Schwartz/subj.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/subj.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/subj.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/subj.Steve+Rhodes",
-}
-
-three_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.3class.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.3class.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.3class.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.3class.Steve+Rhodes",
-}
-
-four_class_labels_files = {
-    "dennis": "data/Dennis+Schwartz/label.4class.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.4class.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.4class.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.4class.Steve+Rhodes",
-}
-
-cleaned_sentences_files = {
-    "dennis": "data/Dennis+Schwartz/subj.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/subj.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/subj.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/subj.clean.Steve+Rhodes",
-}
-
-cleaned_three_class_files = {
-    "dennis": "data/Dennis+Schwartz/label.3class.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.3class.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.3class.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.3class.clean.Steve+Rhodes",
-}
-
-cleaned_four_class_files = {
-    "dennis": "data/Dennis+Schwartz/label.4class.clean.Dennis+Schwartz",
-    "james": "data/James+Berardinelli/label.4class.clean.James+Berardinelli",
-    "scott": "data/Scott+Renshaw/label.4class.clean.Scott+Renshaw",
-    "steve": "data/Steve+Rhodes/label.4class.clean.Steve+Rhodes",
-}
+import data
 
 patterns = [
     # Dennis Schwartz
@@ -69,10 +28,10 @@ def find_duplicates(lst, item):
     return [i for i, x in enumerate(lst) if x == item]
 
 
-for author_name in subjective_sentences_files:
-    sentences_file = subjective_sentences_files[author_name]
-    three_class_file = three_class_labels_files[author_name]
-    four_class_file = four_class_labels_files[author_name]
+for author in data.subjective_sentences_files(False):
+    sentences_file = data.subjective_sentences_files(False)[author]
+    three_class_file = data.three_class_labels_files(False)[author]
+    four_class_file = data.four_class_labels_files(False)[author]
 
     # Load files for cleaning. Class files are needed for removing duplicates.
     reviews = []
@@ -107,15 +66,15 @@ for author_name in subjective_sentences_files:
         cleaned_reviews.append(cleaned)
 
     # Write cleaned data to files
-    with open(cleaned_sentences_files[author_name], 'w') as f:
+    with open(data.subjective_sentences_files()[author], 'w') as f:
         for line in cleaned_reviews:
             f.write(line)
 
-    with open(cleaned_three_class_files[author_name], 'w') as f:
+    with open(data.three_class_labels_files()[author], 'w') as f:
         for line in three_class_labels:
             f.write(line)
 
-    with open(cleaned_four_class_files[author_name], 'w') as f:
+    with open(data.four_class_labels_files()[author], 'w') as f:
         for line in four_class_labels:
             f.write(line)
 
