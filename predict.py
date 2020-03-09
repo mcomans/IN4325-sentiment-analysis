@@ -44,7 +44,7 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
         model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
         params = {"estimator__C": np.logspace(-4, 2, 6)}
 
-        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1, cv=10)
+        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1, cv=8)
         svm_model.fit(X_train, y_train)
         best_c = svm_model.best_estimator_.estimator.C
         debug_log("> Found best C value at " + str(best_c))
