@@ -42,7 +42,7 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     else:
         debug_log("> Running One-vs-All classifier with crossvalidation...")
         model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
-        params = {"estimator__C": np.logspace(-4, 2, 6)exi}
+        params = {"estimator__C": np.logspace(-4, 2, 6)}
 
         svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1, cv=10)
         svm_model.fit(X_train, y_train)
