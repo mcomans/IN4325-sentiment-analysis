@@ -9,14 +9,17 @@ from sklearn.svm import LinearSVR
 import argparse
 
 from configurations import configurations
+from plot import plot_coef
 import data
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+parser.add_argument("-f", "--feature-importance", action="store_true", help="Generate feature importance plot")
 parser.add_argument("-c", "--configuration", choices=configurations,
                     default='replicate-pang', help="Configuration preset")
 parser.add_argument("-o", "--output", help="Output filename",
                     default="results.csv")
+
 args = parser.parse_args()
 
 
@@ -92,16 +95,19 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     debug_log("Confusion matrix:")
     debug_log(cm)
 
-    return accuracy, cm
+    return accuracy, cm, svm_model.coef_
 
 
-def run(author, nr_classes, feature_vectors, labels):
+def run(author, nr_classes, feature_vectors, feature_names, labels):
     X_train, X_test, y_train, y_test = train_test_split(
         feature_vectors, labels, test_size=0.2, random_state=0, stratify=labels)
-    reg_accuracy, reg_cm = regression(
+    reg_accuracy, reg_cm, reg_coef = regression(
         X_train, X_test, y_train, y_test, nr_classes)
     # for speed value for epsilon can be set to 0.00001
     print("Regression accuracy: " + str(reg_accuracy))
+    if (args.feature_importance):
+        plot_coef(f"Regression feature importance {author}", reg_coef, feature_names)
+
     ova_accuracy, ova_cm = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
     print("OVA accuracy: " + str(ova_accuracy))
@@ -130,11 +136,12 @@ for author in data.subjective_sentences_files():
 
     vectorizer = config['vectorizer']
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
+    feature_names = vectorizer.get_feature_names()
 
-    print("# of features: " + str(len(vectorizer.get_feature_names())))
+    print("# of features: " + str(len(feature_names)))
 
     print(">> With three class labels:")
-    run(author, 3, feature_vectors, read_labels(three_class_labels_file))
+    run(author, 3, feature_vectors, feature_names, read_labels(three_class_labels_file))
 
     print(">> With four class labels:")
-    run(author, 4, feature_vectors, read_labels(four_class_labels_file))
+    run(author, 4, feature_vectors, feature_names, read_labels(four_class_labels_file))
