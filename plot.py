@@ -14,3 +14,4 @@ def plot_coef(title, coef, feature_names, top_features=20):
     plt.title(title)
     os.makedirs('feature_plots', exist_ok=True)
     plt.savefig(f'feature_plots/{title}.pdf', bbox_inches = "tight")
+    plt.close()
