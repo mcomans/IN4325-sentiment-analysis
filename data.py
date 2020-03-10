@@ -1,10 +1,10 @@
 data_path = 'data/'
 
 authors = {
-    'a': 'Dennis+Schwartz',
-    'b': 'James+Berardinelli',
-    'c': 'Scott+Renshaw',
-    'd': 'Steve+Rhodes',
+    'a': 'Steve+Rhodes',
+    'b': 'Scott+Renshaw',
+    'c': 'James+Berardinelli',
+    'd': 'Dennis+Schwartz',
 }
 
 
