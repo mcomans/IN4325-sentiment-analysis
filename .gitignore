@@ -1,5 +1,5 @@
 .vscode
-Rplots.pdf
+*.pdf
 .idea/
 *.csv
 .Rhistory
