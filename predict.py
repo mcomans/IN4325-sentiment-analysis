@@ -111,7 +111,7 @@ def run(author, nr_classes, feature_vectors, feature_names, labels):
     # for speed value for epsilon can be set to 0.00001
     print("Regression accuracy: " + str(reg_accuracy))
     if (args.feature_importance):
-        plot_coef(f"Regression feature importance for author {author.upper()}", reg_coef, feature_names)
+        plot_coef(f"Regression feature importance for author {author.upper()} - {nr_classes}-class data", reg_coef, feature_names)
 
     ova_accuracy, ova_cm, ova_coef_list = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
@@ -120,7 +120,7 @@ def run(author, nr_classes, feature_vectors, feature_names, labels):
 
     if (args.feature_importance):
         for i, ova_coef in enumerate(ova_coef_list):
-          plot_coef(f"Ova feature importance for author {author.upper()} for class {str(i + 1)}-{str(nr_classes)}", ova_coef, feature_names)
+          plot_coef(f"Ova feature importance for author {author.upper()} for class {str(i + 1)} - {nr_classes}-class data", ova_coef, feature_names)
 
     with open(args.output, 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
