@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import os
 import numpy as np
 
 def plot_coef(title, coef, feature_names, top_features=20):
@@ -11,4 +12,6 @@ def plot_coef(title, coef, feature_names, top_features=20):
     feature_names = np.array(feature_names)
     plt.xticks(np.arange(1, 1 + 2 * top_features), feature_names[top_coefficients], rotation=60, ha='right')
     plt.title(title)
-    plt.show()
+    os.makedirs('feature_plots', exist_ok=True)
+    plt.savefig(f'feature_plots/{title}.pdf', bbox_inches = "tight")
+    plt.close()

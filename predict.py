@@ -63,7 +63,12 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     debug_log("Confusion matrix:")
     debug_log(cm)
 
-    return accuracy, cm
+    ova_coef_list = []
+
+    for estimator in svm_model.estimators_:
+      ova_coef_list.append(estimator.coef_.toarray()[0])
+
+    return accuracy, cm, ova_coef_list
 
 
 def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
@@ -106,11 +111,16 @@ def run(author, nr_classes, feature_vectors, feature_names, labels):
     # for speed value for epsilon can be set to 0.00001
     print("Regression accuracy: " + str(reg_accuracy))
     if (args.feature_importance):
-        plot_coef(f"Regression feature importance {author}", reg_coef, feature_names)
+        plot_coef(f"Regression feature importance for author {author.upper()}", reg_coef, feature_names)
 
-    ova_accuracy, ova_cm = classify_ova(X_train, X_test, y_train, y_test)
+    ova_accuracy, ova_cm, ova_coef_list = classify_ova(X_train, X_test, y_train, y_test)
     # for speed value for C can be set to 0.005
     print("OVA accuracy: " + str(ova_accuracy))
+
+
+    if (args.feature_importance):
+        for i, ova_coef in enumerate(ova_coef_list):
+          plot_coef(f"Ova feature importance for author {author.upper()} for class {str(i + 1)}-{str(nr_classes)}", ova_coef, feature_names)
 
     with open(args.output, 'a') as f:
         f.write(f"{author},{nr_classes},reg,{reg_accuracy}\n")
