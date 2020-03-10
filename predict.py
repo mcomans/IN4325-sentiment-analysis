@@ -1,14 +1,11 @@
-import numpy as np
-
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, accuracy_score
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.svm import SVC
-from sklearn.svm import LinearSVR
+from sklearn.model_selection import train_test_split
 
 import argparse
+import logging
 
 from configurations import configurations
+from models.Regression import regression
+from models.OneVsAll import classify_ova
 from plot import plot_coef
 import data
 
@@ -24,10 +21,11 @@ parser.add_argument("-o", "--output", help="Output filename",
 args = parser.parse_args()
 
 
-def __debug_log(text):
-    """Print if --debug flag is set."""
-    if args.debug:
-        print(text)
+if args.debug:
+    logging.getLogger().setLevel(level=10)
+    logging.debug("DEBUG logging enabled")
+else:
+    logging.getLogger().setLevel(level=30)
 
 
 def __read_labels(labels_filepath):
@@ -36,94 +34,7 @@ def __read_labels(labels_filepath):
         return [int(line) for line in f.readlines()]
 
 
-def classify_ova(x_train, x_test, y_train, y_test, c=None):
-    """One versus all classifier.
-
-    x_train : training data for the training set.
-    x_test : training data for the test set.
-    y_train : labels for the training set (x_train).
-    y_test : labels for the test set (y_train).
-    c : regularisation parameter
-    """
-    __debug_log("> Running One-vs-All classifier")
-    if not c:
-        # If c has not been set we estimate it using grid search cross
-        # validation.
-        __debug_log("> Finding best value C...")
-        model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
-        params = {"estimator__C": np.logspace(-4, 2, 6)}
-
-        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1,
-                                 cv=8)
-        svm_model.fit(x_train, y_train)
-        c = svm_model.best_estimator_.estimator.C
-        __debug_log("> Found best C value at " + str(c))
-
-    # Given our value for C train the model.
-    svm_model = OneVsRestClassifier(
-        SVC(kernel="linear", C=c)).fit(x_train, y_train)
-
-    svm_predictions = svm_model.predict(x_test)
-    accuracy = svm_model.score(x_test, y_test)
-
-    cm = confusion_matrix(y_test, svm_predictions)
-    __debug_log("Confusion matrix:\n{cm}".format(cm=cm))
-
-    ova_coef_list = []
-
-    for estimator in svm_model.estimators_:
-        ova_coef_list.append(estimator.coef_.toarray()[0])
-
-    return accuracy, cm, ova_coef_list
-
-
-def regression(x_train, x_test, y_train, y_test, nr_classes, epsilon=None,
-               c=None):
-    """Regression model.
-
-    x_train : training data for the training set.
-    x_test : training data for the test set.
-    y_train : labels for the training set (x_train).
-    y_test : labels for the test set (y_train).
-    nr_classes : the amount of classes possible.
-    epsilon :
-    c : regularisation parameter
-    """
-    __debug_log("> Running linear support vector regression")
-    if not epsilon or not c:
-        # If we are missing either epsilon or c (we assume they come as a
-        # pair) we use grid search cross validation to find the best values for
-        # them.
-        __debug_log("> Finding best value for epsilon and c...")
-        params = [{"epsilon": np.logspace(-10, -1, 5)},
-                  {"C": np.logspace(-4, 2, 6)}]
-        svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1,
-                                 cv=8)
-        svm_model.fit(x_train, y_train)
-        epsilon = svm_model.best_estimator_.epsilon
-        c = svm_model.best_estimator_.C
-        __debug_log("> Found best epsilon value at " + str(epsilon))
-        __debug_log("> Found best C value at " + str(c))
-
-    svm_model = LinearSVR(epsilon=epsilon, C=c).fit(x_train, y_train)
-    svm_predictions = svm_model.predict(x_test)
-
-    # As we are using regression we need to round the predicted values to
-    # a class (integer, amount of stars) and clamp the value between 0 and
-    # maximum amount of stars.
-    rounded_predictions = np.round(svm_predictions)
-    rounded_predictions = [min(nr_classes - 1, max(0, x))
-                           for x in rounded_predictions]
-
-    accuracy = accuracy_score(rounded_predictions, y_test)
-
-    cm = confusion_matrix(y_test, rounded_predictions)
-    __debug_log("Confusion matrix:\n{cm}".format(cm=cm))
-
-    return accuracy, cm, svm_model.coef_
-
-
-def run(author, nr_classes, feature_vectors, feature_names, labels):
+def __run(author, nr_classes, feature_vectors, feature_names, labels):
     """
     Run both the regression and ova models for a given author and amount
     of classes.
@@ -186,7 +97,7 @@ for author in data.subjective_sentences_files():
         subjective_sentences = f.readlines()
 
     config = configurations[args.configuration]
-    __debug_log(">> Using config: {}".format(config))
+    logging.debug(">> Using config: {}".format(config))
 
     vectorizer = config['vectorizer']
     feature_vectors = vectorizer.fit_transform(subjective_sentences)
@@ -195,9 +106,9 @@ for author in data.subjective_sentences_files():
     print("# of features: " + str(len(feature_names)))
 
     print(">> With three class labels:")
-    run(author, 3, feature_vectors, feature_names,
-        __read_labels(three_class_labels_file))
+    __run(author, 3, feature_vectors, feature_names,
+          __read_labels(three_class_labels_file))
 
     print(">> With four class labels:")
-    run(author, 4, feature_vectors, feature_names,
-        __read_labels(four_class_labels_file))
+    __run(author, 4, feature_vectors, feature_names,
+          __read_labels(four_class_labels_file))
