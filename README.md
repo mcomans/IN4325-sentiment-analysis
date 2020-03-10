@@ -13,6 +13,14 @@ with respect to rating scales.*, Proceedings of the ACL, 2005.
 
 The datasets can be found [here](http://www.cs.cornell.edu/people/pabo/movie-review-data/).
 
+### Cleaning
+Before using these datasets we performed some cleaning in the form of
+ removing duplicate reviews and removing literal star ratings from the
+ reviews themselves.
+ The process applied can be found in `cleaner.py`.
+ The output of those files is stored for each author respectively next to
+ their original dataset (`/data/<author>/`) marked by a `.clean` in their
+ name.
 
 ## Running Locally
 
