@@ -68,5 +68,5 @@ four_plot = ggplot() +
 grid.arrange(three_plot, four_plot, ncol = 2)
 
 g = arrangeGrob(three_plot, four_plot, ncol = 2)
-ggsave(file="avg_accuracies.png", g, width = 15, height = 7, scale = 2, units = "cm")
+ggsave(file="avg_accuracies.pdf", g, width = 15, height = 7, scale = 2, units = "cm")
 
