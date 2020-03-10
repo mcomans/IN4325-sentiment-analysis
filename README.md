@@ -42,3 +42,17 @@ It is optional to create a virtualenv with this python version as described
     ```bash
     python -m pip install -r requirements.txt
     ```
+
+### Running steps
+
+Given you have completed the installation steps and if you chose to create a
+ virtualenv you have activated it you can run the following commands to run
+ the prediction:
+
+1. Run the models using:
+    ```bash
+    python predict.py
+    ```
+
+This command will start going through all the experiments described in our
+ report.
