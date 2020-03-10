@@ -42,9 +42,9 @@ def classify_ova(X_train, X_test, y_train, y_test, c=-1):
     else:
         debug_log("> Running One-vs-All classifier with crossvalidation...")
         model_to_set = OneVsRestClassifier(SVC(kernel="linear"))
-        params = {"estimator__C": np.logspace(-4, 2, 10)}
+        params = {"estimator__C": np.logspace(-4, 2, 6)}
 
-        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1)
+        svm_model = GridSearchCV(model_to_set, param_grid=params, n_jobs=-1, cv=8)
         svm_model.fit(X_train, y_train)
         best_c = svm_model.best_estimator_.estimator.C
         debug_log("> Found best C value at " + str(best_c))
@@ -71,9 +71,9 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
     else:
         debug_log(
             "> Running linear support vector regression with crossvalidation...")
-        params = [{"epsilon": np.logspace(-10, -1, 10)},
-                  {"C": np.logspace(-4, 2, 10)}]
-        svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1)
+        params = [{"epsilon": np.logspace(-10, -1, 5)},
+                  {"C": np.logspace(-4, 2, 6)}]
+        svm_model = GridSearchCV(LinearSVR(), param_grid=params, n_jobs=-1, cv=8)
         svm_model.fit(X_train, y_train)
         best_eps = svm_model.best_estimator_.epsilon
         best_c = svm_model.best_estimator_.C
@@ -97,7 +97,7 @@ def regression(X_train, X_test, y_train, y_test, nr_classes, epsilon=-1, c=-1):
 
 def run(author, nr_classes, feature_vectors, labels):
     X_train, X_test, y_train, y_test = train_test_split(
-        feature_vectors, labels, test_size=0.3, random_state=0)
+        feature_vectors, labels, test_size=0.2, random_state=0, stratify=labels)
     reg_accuracy, reg_cm = regression(
         X_train, X_test, y_train, y_test, nr_classes)
     # for speed value for epsilon can be set to 0.00001
