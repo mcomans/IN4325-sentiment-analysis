@@ -1,3 +1,6 @@
+# This file contains functions to preprocess the data like the use of a
+# tokenizer
+
 from nltk.corpus import stopwords, wordnet
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -5,20 +8,32 @@ from nltk.tag import pos_tag
 
 
 class Tokenizer:
-    def __init__(self, steps):
+    """Tokenizer class that is able to handle a set of tokanisation steps."""
+
+    def __init__(self, steps=None):
+        """
+        Initialise the tokenizer with a set of steps to apply when given a piece
+        of text.
+
+        Each step should take as input a list of words and return the
+        processed output as a list of words.
+        """
+        if steps is None:
+            steps = []
         self.steps = steps
 
     def tokenize(self, text):
-        if (len(self.steps) < 1):
-            return text
-        steps_cp = self.steps[:]
-        result = steps_cp.pop(0)(text)
-        for step in steps_cp:
+        """First tokenize the text and then apply the provided steps for this
+        Tokenizer. """
+        # Use NLTK word tokenizer as base.
+        result = word_tokenize(text)
+        for step in self.steps[:]:
             result = step(result)
         return result
 
 
-def to_wordnet(tag):
+def __to_wordnet(tag):
+    """Given a tag convert it to the respective wordnet tag."""
     if tag.startswith('J'):
         return wordnet.ADJ
     elif tag.startswith('V'):
@@ -31,14 +46,9 @@ def to_wordnet(tag):
         return wordnet.NOUN
 
 
-def tokenize(text):
-    """Tokenizes text to words"""
-    # Use NLTK word tokanizer
-    return word_tokenize(text)
-
-
+# Below are two optional steps that could be given to the Tokenizer.
 def remove_stopwords(words):
-    """Removes stopwords from list of words"""
+    """Removes stopwords from list of words."""
     # Use english stopwords corpus
     stopwords_en = set(stopwords.words('english'))
     # Filter and return non-stopwords
@@ -46,8 +56,8 @@ def remove_stopwords(words):
 
 
 def lemmatize_words(tokens):
-    """Uses WordNet lemmatizer to lemmatize list of tokens"""
-    tagged_tokens = [(x[0], to_wordnet(x[1])) for x in pos_tag(tokens)]
+    """Uses WordNet lemmatizer to lemmatize list of tokens."""
+    tagged_tokens = [(x[0], __to_wordnet(x[1])) for x in pos_tag(tokens)]
     # Use wordnet lemmatizer
     wnl = WordNetLemmatizer()
     # Return lemmatized tokens
