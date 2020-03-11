@@ -34,6 +34,14 @@ It is optional to create a virtualenv with this python version as described
  in step 2, this requires you to have virtualenv (`16.6.2`) installed on your
  system too.
 
+You might need to install some resources for the NLTK package:
+ - `tokenizers/punkt`
+ - `taggers/averaged_perceptron_tagger`
+ - `corpora/stopwords`
+ - `corpora/wordnet`
+
+ The original versions used for the experiments can be found at
+ [nltk.org](http://www.nltk.org/nltk_data/).
 ### Installation steps
 
 1. Clone the repository to a place of your liking.
