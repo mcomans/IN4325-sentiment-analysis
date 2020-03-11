@@ -14,7 +14,7 @@ parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 parser.add_argument("-f", "--feature-importance", action="store_true",
                     help="Generate feature importance plot")
 parser.add_argument("-c", "--configuration", choices=configurations,
-                    default='replicate-pang', help="Configuration preset")
+                    default='unigrams', help="Configuration preset")
 parser.add_argument("-o", "--output", help="Output filename",
                     default="results.csv")
 
