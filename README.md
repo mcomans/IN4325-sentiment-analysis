@@ -86,3 +86,16 @@ Default is `results.csv`.
 
 These options will allow you to recreate all the experiments described in the
  report.
+
+### Creating plots
+
+To create the accuracy plots from the `results.csv` we use the following R
+script: `accuracies.r`. Make sure you have R installed and the following
+packages:
+- ggplot2
+- gridExtra
+
+After installing these dependencies you can run the script using:
+```bash
+Rscript accuracies.r
+```
